@@ -1,5 +1,9 @@
 import { createStore } from 'vuex'
 
+
+const ethers = require('ethers')
+const provider = new ethers.providers.JsonRpcProvider('https://eth-goerli.g.alchemy.com/v2/XruToWBXmylHCyWPYvePYpPW7r_rmbWs')
+
 // web3 - npm version 1.8.2
 const Web3 = require('web3')
 const web3 = new Web3('wss://eth-goerli.g.alchemy.com/v2/XruToWBXmylHCyWPYvePYpPW7r_rmbWs')
@@ -17,8 +21,8 @@ export default createStore({
     },
     actions: {
         async newBlockHeaders({commit}){
-            let subscribe = web3.eth.subscribe("newBlockHeaders")
-            .on('data', block => {
+            provider.on('block', async blocknumber =>{
+                let block = await provider.getBlock(blocknumber)
                 let newBlock = {
                     number: block.number,
                     hash: block.hash
@@ -27,10 +31,13 @@ export default createStore({
             })
         },
         async getBlock({commit}, blockNumberOrHash){
-            return await web3.eth.getBlock(blockNumberOrHash)
+            if (! ethers.utils.isBytesLike(blockNumberOrHash)){
+                blockNumberOrHash = Number(blockNumberOrHash)
+            }
+            return await provider.getBlock(blockNumberOrHash)
         },
         async getTransaction({commit}, transactionHash){
-            return await web3.eth.getTransaction(transactionHash)
+            return await provider.getTransaction(transactionHash)
         }
     },
     modules: {
